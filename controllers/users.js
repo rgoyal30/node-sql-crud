@@ -1,15 +1,16 @@
 const { QueryTypes } = require('sequelize')
 const bcrypt = require("bcrypt");
+const { uuid } = require('uuidv4');
+
 const db = require('../databases/db')
 const { getUserByEmail, getUserByID } = require('../middlewares/user')
 
-const getUsers = (req, res) => {
-    const promise = db.query('Select * from users', {
+const getUsers = async (req, res) => {
+    const users = await db.query('Select * from users', {
         type: QueryTypes.SELECT
-    })
+    });
 
-    promise
-    .then(data => res.status(200).json({ message: 'success', data: data }))
+    res.status(200).json({ message: 'success', data: users });
 
 }
 
@@ -23,8 +24,9 @@ const createUser = async(req, res) => {
     }
     else {
         let hashedPassword = await bcrypt.hash(user.password, 10)
-        const data = await db.query('Insert into users (name, email, password, mobileno) values (?, ?, ?, ?)', {
-            replacements: [user.name, user.email, hashedPassword, user.mobileno],
+        let guid = uuid();
+        const data = await db.query('Insert into users (name, email, password, mobileno, guid) values (?, ?, ?, ?, ?)', {
+            replacements: [user.name, user.email, hashedPassword, user.mobileno, guid],
             type: QueryTypes.INSERT
         })
     
@@ -87,9 +89,10 @@ const updateUser = async(req, res) => {
 
 }
 
+
 module.exports = {
     getUsers,
     createUser,
     deleteUser,
-    updateUser
+    updateUser,
 }
